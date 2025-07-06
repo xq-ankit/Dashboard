@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Employee Dashboard</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 6rem 2rem 2rem; /* Add top padding for fixed header */
+        background-color: #f5f5f5;
+        line-height: 1.6;
+      }
+
+      header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        background-color: #ffffff;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem 2rem;
+      }
+
+      h1 {
+        color: #333;
+        margin: 0;
+        font-size: 1.5rem;
+      }
+
+      .refresh-btn {
+        position: absolute;
+      right: 2rem;
+      padding: 0.5rem 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.2s ease-in-out;
+      }
+
+      .refresh-btn:hover {
+        background-color: #0056b3;
+      }
+
+      .card {
+        background: white;
+        padding: 1rem 2rem;
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+
+      th, td {
+        padding: 0.6rem 1rem;
+        border: 1px solid #ddd;
+        text-align: center;
+      }
+
+      th {
+        background-color: #eaeaea;
+      }
+
+      tfoot td {
+        font-weight: bold;
+        background-color: #f0f0f0;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Welcome to CPG Tech Employee Dashboard</h1>
+      <button class="refresh-btn" onclick="location.reload()">🔄 Refresh</button>
+    </header>
+
+    <div class="card" id="wfo-card">
+      <h2>🏢 Work From Office Summary</h2>
+      <p><strong>Name:</strong> <span id="employee-name-wfo">Loading...</span></p>
+      <p><strong>Total WFO Days:</strong> <span id="wfo-count">Loading...</span></p>
+    </div>
+
+    <div class="card" id="leave-card">
+      <h2>📋 Leave Balance Summary</h2>
+      <p><strong>Name:</strong> <span id="employee-name-leave">Loading...</span></p>
+      <table>
+        <thead>
+          <tr>
+            <th>Leave Type</th>
+            <th>Leaves Taken</th>
+            <th>Available Balance</th>
+          </tr>
+        </thead>
+        <tbody id="leave-data"></tbody>
+        <tfoot id="leave-summary"></tfoot>
+      </table>
+    </div>
+
+    <div class="card" id="billable-card">
+      <h2>💼 Billable Hours Summary</h2>
+      <p><strong>Name:</strong> <span id="employee-name-billable">Loading...</span></p>
+      <p><strong>Total Billable Hours (34):</strong> <span id="billable-hours">Loading...</span></p>
+    </div>
+
+    <script>
+      const setText = (id, value) => {
+        document.getElementById(id).textContent = value ?? "N/A";
+      };
+
+      fetch("/api/dashboard/1")
+        .then((res) => res.json())
+        .then((data) => {
+          setText("employee-name-wfo", data.employee);
+          setText("wfo-count", data.wfo_count);
+        })
+        .catch((err) => console.error("Error loading WFO:", err));
+
+      fetch("/api/dashboard/2")
+        .then((res) => res.json())
+        .then((data) => {
+          setText("employee-name-leave", data.employee);
+          const tbody = document.getElementById("leave-data");
+          const tfoot = document.getElementById("leave-summary");
+          tbody.innerHTML = "";
+          tfoot.innerHTML = "";
+
+          for (let type in data.leaves) {
+            const leave = data.leaves[type];
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${type}</td>
+              <td>${leave.taken}</td>
+              <td>${leave.available}</td>
+            `;
+            tbody.appendChild(row);
+          }
+
+          if (data.summary) {
+            const summaryRow = document.createElement("tr");
+            summaryRow.innerHTML = `
+              <td>Total (All Leaves)</td>
+              <td>${data.summary.total_taken}</td>
+              <td>${data.summary.total_available}</td>
+            `;
+            tfoot.appendChild(summaryRow);
+          }
+        })
+        .catch((err) => console.error("Error loading Leave Data:", err));
+
+      fetch("/api/dashboard/3")
+        .then((res) => res.json())
+        .then((data) => {
+          setText("employee-name-billable", data.employee);
+          setText("billable-hours", data.total_billable_hours);
+        })
+        .catch((err) => console.error("Error loading Billable Hours:", err));
+    </script>
+  </body>
+</html>
