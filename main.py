@@ -4,7 +4,12 @@ from fastapi.staticfiles import StaticFiles
 import pandas as pd
 import os
 
-app = FastAPI()
+
+app = FastAPI(
+    title="Employee Dashboard API",
+    description="This API serves WFO, Leave, and Billing data for employees.",
+    version="1.0.0"
+)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 def get_username():
@@ -31,7 +36,6 @@ def index():
 @app.get("/api/dashboard/1")
 def dashboard_1():
     try:
-        # Correct header row (4th row, index 3)
         df = pd.read_excel('dashboard1.xlsx', sheet_name='Sheet1', header=3)
 
         # Filter relevant columns and drop rows with missing data
